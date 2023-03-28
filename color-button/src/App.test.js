@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import App from './App';
+import App, { replaceCamelWithSpaces } from './App';
 
 test('button has correct initial color, and updates when clicked', () => {
   render(<App />);
@@ -42,4 +42,46 @@ test('Checkbox disables button on first click and enables on second click', () =
   expect(colorButton).toBeDisabled();
   fireEvent.click(checkbox);
   expect(colorButton).toBeEnabled();
+});
+
+test('Disabled button has gray background and reverts to red', () => {
+  render(<App />);
+  const checkbox = screen.getByRole('checkbox', { name: 'Disable button' });
+  const colorButton = screen.getByRole('button', { name: 'Change to blue' });
+
+  fireEvent.click(checkbox);
+  expect(colorButton).toHaveStyle('background-color:gray');
+
+  fireEvent.click(checkbox);
+  expect(colorButton).toHaveStyle('background-color:red');
+});
+
+test('Clicked disabled button has gray background and reverts to blue', () => {
+  render(<App />);
+  const checkbox = screen.getByRole('checkbox', { name: 'Disable button' });
+  const colorButton = screen.getByRole('button', { name: 'Change to blue' });
+
+  // 파란색으로 버튼 색 변경
+  fireEvent.click(colorButton);
+
+  // 버튼 비활성화
+  fireEvent.click(checkbox);
+  expect(colorButton).toBeDisabled();
+  expect(colorButton).toHaveStyle('background-color:gray');
+
+  fireEvent.click(checkbox);
+  expect(colorButton).toBeEnabled;
+  expect(colorButton).toHaveStyle('background-color:blue');
+});
+
+describe('spaces before camel-case capital letters', () => {
+  test('Works for no inner Capital letter', () => {
+    expect(replaceCamelWithSpaces('Red')).toBe('Red');
+  });
+  test('Works for one inner capital letter', () => {
+    expect(replaceCamelWithSpaces('MidnightBlue')).toBe('Midnight Blue');
+  });
+  test('Works for multiple inner capital letter', () => {
+    expect(replaceCamelWithSpaces('MediumVioletRed')).toBe('Medium Violet Red');
+  });
 });

@@ -2,6 +2,11 @@ import logo from './logo.svg';
 import './App.css';
 import { useState } from 'react';
 
+export function replaceCamelWithSpaces(colorName) {
+  // 정규식 설명 : 대문자가 문자열의 첫, 끝이 아닌한, 모든 대문자 앞에 공백을 넣는 식
+  return colorName.replace(/\B([A-Z])\B/g, ' $1');
+}
+
 function App() {
   const [style, setStyle] = useState('red');
   const [disabled, setDisabled] = useState(false);
@@ -14,7 +19,7 @@ function App() {
         onClick={() => {
           setStyle(newStyle);
         }}
-        style={{ backgroundColor: style }}
+        style={{ backgroundColor: disabled ? 'gray' : style }}
       >
         Change to {newStyle}
       </button>
