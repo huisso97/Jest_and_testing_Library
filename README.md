@@ -263,12 +263,92 @@ test('button has correct initial color', () => {
 
 - 에러 문장을 보았듯이, 단언문의 테스트가 실패시, 이후 테스트는 실행되지 않는다.
 
-### React 코드 : 버튼을 클릭하여 색상 변경하기
-
-### 수동 인수(Acceptance) 테스트
-
 ### 버튼과 체크박스의 초기 조건 테스트
 
-### 가져온(Import) CSS 모듈에서 스타일 테스트하기
+버튼과 체크박스를 위해 초기 상태부터 테스팅하기.
+
+- 활성화할 수 있는 matcher를 jest-dom docs에서 찾아 적용한다.
+
+```javascript
+// check that the button starts out enabled
+const colorButton = screen.getByRole('button', { name: 'Change to blue' });
+expect(colorButton).toBeEnabled();
+```
+
+- matcher 찾기
+  https://github.com/testing-library/jest-dom
+- 체크박스의 역할 찾기
+  요소 역할 자료 : w3.org/TR/wai-aria/#role-definitions
+
+```javascript
+// check that the checkbox starts out unchecked
+const checkbox = screen.getByRole('checkbox');
+expect(checkbox).not.toBeChecked();
+```
 
 ### 코드 퀴즈! 체크박스 체크 시 확인 버튼 비활성화
+
+코드와 테스트가 어떻게 상호작용하는지를 파악함으로써, 테스트와 코드를 확실히 디버깅 할 수 있게 된다.
+
+#### 초기 조건의 테스트
+
+- 1. fireEvent.click을 사용하여 체크박스를 클릭한다.
+- 2-1. 체크 박스에 체크를 하고 버튼 비활성화 여부를 확인한 뒤
+- 2-2. 두 번째 클릭 이후 체크박스의 체크가 해제되면 버튼이 다시 활성화되는지 여부 확인
+- 버튼에 대한 assertion(단언)
+  - expect(button).toBeEnabled()
+  - expect(button).toBeDisabled()
+
+위의 테스트 과정은 초기 조건의 테스트를 위한 과정이다.
+기능 테스트와 분리하기 위해 새로운 테스트를 만들어 테스트한다.
+
+### 코드 퀴즈! 비활성화된 버튼이 회색으로 변경
+
+#### test flows(가능성 있는 유저 흐름을 시뮬레이션)
+
+- button 비활성화 -> button 회색으로 변경 -> button 활성화 -> button 빨강으로 변경
+- button 클릭하여 색 변경 -> button 비활성화 -> button 회색으로 변경
+- button 활성화 -> button 파랑으로 변경
+
+각 흐름의 마지막 단계에 assertion을 한다.
+
+### 유닛(Unit) 테스트 함수
+
+함수들은 컴포넌트들과 분리된다.
+
+- 여러 개의 컴포넌트에서 혹은 한 컴포넌트 내에서 재사용되는 경우
+- 복잡한 로직
+
+#### 함수의 유닛테스트를 권장하는 경우
+
+- 기능 테스트로 테스트하기엔 로직이 너무 복잡한 경우
+- 엣지 케이스가 너무 많은 경우
+
+#### describe 문
+
+테스트를 그룹으로 묶는 방법이다.
+
+##### replaceCamelWithSpaces
+
+카멜케이스의 문자를 대문자 기준으로 앞에 space를 놓는 함수에 대해 유닛 테스트를 진행한다.
+
+1. 함수는 import로 가져오고,
+   직접 인자를 넘겨서 반환되는 값을 테스트하는 과정이다.
+
+2. 각 엣지 케이스들(내부에 대문자가 없을 경우, 1개일 경우, 2개 이상일 경우)에 대해 각 test를 만든다.
+
+3. ㄴtoBe는 jest의 기본 matcher로 양 측의 두 값을 직접 비교한다.
+
+### 코드 퀴즈! 새 색상 이름에 대한 테스트 업데이트
+
+### 유닛(Unit) 테스트를 하는 경우
+
+### 복습: 간단한 앱
+
+## Section 3 : 테스팅 라이브러리가 포함된 ESLint와 Prettier
+
+## Section 4 : Form 복습과 팝오버
+
+## Section 5 : Mock Service Worker(MSW)로 서버 응답 시뮬레이션
+
+## Section 6 : Provider에 래핑된 컴포넌트 테스트하기
