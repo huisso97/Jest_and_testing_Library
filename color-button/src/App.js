@@ -11,7 +11,8 @@ function App() {
   const [style, setStyle] = useState('red');
   const [disabled, setDisabled] = useState(false);
 
-  const newStyle = style === 'red' ? 'blue' : 'red';
+  const newStyle =
+    style === 'MediumVioletRed' ? 'MidnightBlue' : 'MediumVioletRed';
   return (
     <div>
       <button
@@ -21,7 +22,7 @@ function App() {
         }}
         style={{ backgroundColor: disabled ? 'gray' : style }}
       >
-        Change to {newStyle}
+        Change to {replaceCamelWithSpaces(newStyle)}
       </button>
       <input
         type="checkbox"
