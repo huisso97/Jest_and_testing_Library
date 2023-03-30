@@ -588,6 +588,8 @@ test('Checkbox disables button on first click and enables on second click', asyn
 1. mocks/server.js 생성
 2. handlers와 함께 setupServer 실행
    - 배열을 펼치면 배열의 각 요소를 별개의 인수로 만든다.
+   - 테스트 전에 서버가 요청을 리스닝하도록 설정
+   - 변경될 수 있는 테스트 후에 핸들러를 재설정
 
 ```javascript
 // src/mocks/server.js
@@ -618,28 +620,134 @@ afterAll(() => server.close());
 
 ### Mock Service Worker로 테스트하기: 스쿱 옵션
 
-### 중요: axios 1.x 오류
+#### toBe()
 
-### 선택적 React 코드 : 옵션(Options)rhk ScoopOption 컴포넌트
+숫자나 문자열을 비교할 경우에 사용하는 matcher.
+
+#### toEqual()
+
+배열이나 객체를 비교할 때 사용하는 matcher.
+
+Options Component에서 server에 요청을 보내면, MSW가 해당 요청을 가로채어 handler에 적혀진 응답값을 대신 반환해준다.
 
 ### 'await findBy'로 비동기식으로 채워지는 요소 찾기
 
-### 코드 퀴즈! 섭어ㅔ서 오는 Topping 옵션
+요소가 비동기식으로 페이지에 나타나 비동기식 작업을 할 때마다 `await`와 `findBy`를 사용해야하며, 서버 연결은 거의 항상 비동기식이다.
 
-### 참고 : 'Unable to find role="img"' 에러 해결하기
+기존 `getBy`로 가져왔던 요소를 `await`와 `findBy`로 바꾼다.
 
-### 에러 서버 응답 계획
+```javascript
+// getAllByRole
+const scoopImages = screen.getAllByRole('img', { name: /scoop$/i });
+
+// findBy
+const scoopImages = await screen.findAllByRole('img', { name: /scoop$/i });
+```
+
+### 코드 퀴즈! 서버에서 오는 Topping 옵션
+
+1. `/toppings` 라우트를 위한 핸들러 추가
+2. 핸들러에 리턴값 설정
+3. `Options.test.jsx`에 테스트 코드 작성
+4. name은 `/topping$/i`으로 설정
+5. `Options.jsx` 업데이트
 
 ### 테스트에서 서버 에러 응답 시뮬레이션하기
 
-### 선택적 React 코드 : 옵션(Option) 서버 에러에 대한 경고 배너
+서버 에러 응답을 테스트하기 위해서는 기존 핸들러에 오버라이드를 해야한다.
+
+```javascript
+import { render, screen } from '@testing-library/react';
+import OrderEntry from '../OrderEntry';
+import { rest } from 'msw';
+import { server } from '../../../mocks/server';
+
+test('handle error for scoops and toppings routes', async () => {
+  // override handler
+  // reset 핸들러는 핸들러를 인수로 취하고, 서버에 관한 엔드포인트가 있는 모든 핸들러를 재설정한다.
+  server.resetHandlers(
+    rest.get('http://localhost:3030/scoops', (req, res, ctx) =>
+      res(ctx.status(500))
+    ),
+    rest.get('http://localhost:3030/toppings', (req, res, ctx) =>
+      res(ctx.status(500))
+    )
+  );
+
+  render(<OrderEntry />);
+
+  // alert가 비동기식으로 나타날 것 -> Axios에서 catch 함수가 실행될 때까지 경고창이 나타나지 않기 때문
+  const alerts = await screen.findAllByRole('alert', {
+    name: 'An unexpected error occured. Please try again later.',
+  });
+
+  expect(alerts).toHaveLength(2);
+});
+```
 
 ### 선택된 테스트만 실행하는 방법과 "waitFor"
 
-### 테스트는 통과했지만 경고/에러가 발생했나요?
+#### 선택적 테스트
 
-### 왜 "name"이 "alert"기능에 작동하지 않나요?
+특정 테스트 파일만 확인할 경우에는 test 중인 터미널에서 w를 클릭하고 p를 클릭하여 정규화로 특정 파일만 테스트한다.
 
-### 서버 에러 응답과 테스트 디버깅 도구
+테스트들 중 특정 테스트만 테스트하고 싶을 경우, `test.only`로 테스트하고,
+특정 테스트는 제외하고 테스트하고 싶을 경우 `test.skip`으로 제외시킨다.
+
+#### 경합 조건(Race Condition)
+
+오류가 표시될지 말지를 결정하는 것
+
+단언문이 실행기 기전 두 네트워크 호출 모두 반환되면 단언문이 alert를 확인할 수 있기 때문에 오류가 표시되지 않는다.
+
+하지만 두 네트워크 호출 중 하나만 반환되었을 때 단언문이 실행되면, 오류를 마주하게 된다.
+
+우리는 테스트가 모든곳에서 성공하길 원한다.
+
+- CI(Continuous Integration) 등에서 실행될 수 있도록
+
+##### waitFor
+
+항목이 다 찰 떄까지 기다리도록 하는 메서드
+
+- 두 개의 alert가 모두 반환되거나 타임아웃(timeout) 제한에 도달할 때까지 테스트 실행을 멈춘다
+
+```javascript
+await waitFor(async () => {
+  const alerts = await screen.findAllByRole('alert');
+
+  expect(alerts).toHaveLength(2);
+});
+```
 
 ## Section 6 : Provider에 래핑된 컴포넌트 테스트하기
+
+### 텍스트 입력란 채우기 : 소계 테스트
+
+`totalUpdates.test.jsx` : 기능 테스를 위한 파일
+
+#### text 부분 일치 속성 추가
+
+`screen.getByText`는 주어진 텍스트와 정확하게 일치할지, 부분적으로 일치할지를 정할 수 있는 `exact`속성이 있다.
+
+다음과 같이 `exact` 속성을 `false`로 바꾸면, 부분 일치로 찾는다.
+
+```javascript
+const scoopsSubtotal = screen.getByText('Scoops total: $', { exact: false });
+```
+
+### 테스트 설정에 콘텍스트 추가하기
+
+### 기본값으로 Provider에 래핑할 커스텀 렌더링 생성하기
+
+### 복습 : 콘텍스트가 있는 스쿱 소계
+
+### Toppings 소계
+
+### 총계
+
+### "Not wrapped in act()..." 에러
+
+### 명시적 언마운트가 필요한 이유
+
+### 능능 테스트는 무엇을 잡아야하나?
